@@ -1,6 +1,6 @@
 import express from "express";
 const app = express();
-export default app
+
 import dotenv from "dotenv";
 import Connection from "./db/connections.js";
 import patientRouter from "./routes/patientRoutes.js";
@@ -18,7 +18,4 @@ app.use("/api/patients", patientRouter);
 app.use("/api/doctors", doctorRouter);
 app.use("/api/admin", adminRouter)
 
-const port = process.env.PORT
-app.listen(port, ()=>{
-    console.log(`Listening on port ${port}`)
-})
+export default app
