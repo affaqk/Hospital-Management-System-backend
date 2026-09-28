@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import Doctor from "../models/doctorModel.js";
 import { sendToken } from "../util/jwtToken.js";
 import { sendEmail } from "../util/sendMail.js";
@@ -88,7 +89,7 @@ export const doctorProfile = async (req, res) => {
             })
         };
 
-        return res.status(400).json({
+        return res.status(200).json({
             success : true,
             doctor
         })

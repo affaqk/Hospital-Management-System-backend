@@ -1,5 +1,4 @@
-// monolithic architecture
-// microservices architecture
+import crypto from "crypto";
 import Patient from "../models/patientModel.js";
 import { sendToken } from "../util/jwtToken.js";
 import { sendEmail } from "../util/sendMail.js";
