@@ -30,7 +30,10 @@ export const registerDoctor = async (req, res) => {
 
         const message = "Your profile is in pending state, Lets wait for approval"
 
-        sendToken(doctor, 200, res, message)
+        return res.status(200).json({
+            success : true,
+            message
+        })
     } catch (error) {
         console.log(error)
         return res.status(500).json({
@@ -67,6 +70,13 @@ export const loginDoctor = async (req, res) => {
             })
         }
 
+        if(doctor.status !== "Approved"){
+            return res.status(400).json({
+                success : true,
+                message : "Your status is still in pending, lets wait for approval"
+            })
+        }
+
         const message = "Doctor loggedin successfully"
 
         sendToken(doctor, 200, res, message)
@@ -81,7 +91,7 @@ export const loginDoctor = async (req, res) => {
 
 export const doctorProfile = async (req, res) => {
     try {
-        const doctor = await Doctor.findById(req.params.id);
+        const doctor = await Doctor.findById(req.user.id);
         if(!doctor){
             return res.status(400).json({
                 success : false,
@@ -104,7 +114,7 @@ export const doctorProfile = async (req, res) => {
 
 export const updateDoctorProfile = async (req, res) => {
     try {
-        const doctor = await Doctor.findByIdAndUpdate(req.params.id, req.body,{
+        const doctor = await Doctor.findByIdAndUpdate(req.user.id, req.body,{
             runValidators : true,
             new : true
         });
@@ -132,7 +142,7 @@ export const updateDoctorProfile = async (req, res) => {
 
 export const deleteDoctorProfile = async (req, res) => {
     try {
-        const doctor = await Doctor.findByIdAndDelete(req.params.id);
+        const doctor = await Doctor.findByIdAndDelete(req.user.id);
         if(!doctor){
             return res.status(400).json({
                 success : false,
@@ -273,5 +283,33 @@ export const resetPasswordDoctor = async (req, res) => {
     }
 }
 
+export const updatePasswordDoctor = async (req, res) => {
+    try {
+        const { oldPassword, newPassword, confirmNewPassword } = req.body;
+        const doctor = await Doctor.findById(req.user.id);
+        if(!doctor){
+            return res.status(400).json({
+                success : false,
+                message : "Doctor not found"
+            })
+        }
 
-// ali = ali khan
+        if(newPassword !== confirmNewPassword){
+            return res.status(400).json({
+                success : false,
+                message : "Password doesnt match to each other"
+            })
+        }
+
+        doctor.password = newPassword;
+        await doctor.save();
+        const message = "Password updated successfully"
+        sendToken(doctor, 200, res, message)
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success : false,
+            error
+        })
+    }
+}

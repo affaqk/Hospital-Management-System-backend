@@ -1,4 +1,5 @@
 import Admin from "../models/adminModel.js";
+import Doctor from "../models/doctorModel.js";
 import { sendToken } from "../util/jwtToken.js";
 import { sendEmail } from "../util/sendMail.js";
 import crypto from "crypto"
@@ -78,7 +79,7 @@ export const adminLogin = async (req, res) => {
 
 export const adminProfile = async (req, res) => {
     try {
-        const admin = await Admin.findById(req.params.id);
+        const admin = await Admin.findById(req.user.id);
         if(!admin){
             return res.status(400).json({
                 success : false,
@@ -101,7 +102,7 @@ export const adminProfile = async (req, res) => {
 
 export const updateAdminProfile = async (req, res) => {
     try {
-        const admin = await Admin.findByIdAndUpdate(req.params.id, req.body, {
+        const admin = await Admin.findByIdAndUpdate(req.user.id, req.body, {
             new : true,
             runValidators : true
         });
@@ -129,7 +130,7 @@ export const updateAdminProfile = async (req, res) => {
 
 export const deleteAdminProfile = async (req, res) => {
     try {
-        const admin = await Admin.findByIdAndDelete(req.params.id);
+        const admin = await Admin.findByIdAndDelete(req.user.id);
 
         if(!admin){
             return res.status(400).json({
@@ -239,6 +240,121 @@ export const resetPasswordAdmin = async (req, res) => {
         await admin.save();
         const message = "Password updated successfully"
         sendToken(admin, 200, res, message)
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success : false,
+            error
+        })
+    }
+}
+
+export const updatePasswordAdmin = async (req, res) => {
+    try {
+        const { oldPassword, newPassword, confirmNewPassword } = req.body;
+        const admin = await Admin.findById(req.user.id);
+        if(!admin){
+            return res.status(400).json({
+                success : false,
+                message : "User not found"
+            })
+        }
+
+        if(newPassword !== confirmNewPassword){
+            return res.status(400).json({
+                success : false,
+                message : "Password doesnt match to each other"
+            })
+        }
+
+        admin.password = newPassword;
+        await admin.save();
+        const message = "Password updated successfully"
+        sendToken(admin, 200, res, message)
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success : false,
+            error
+        })
+    }
+}
+
+export const approveDoctor = async (req, res) => {
+    try {
+        const doctor = await Doctor.findById(req.params.id);
+        if(!doctor){
+            return res.status(400).json({
+                success : false,
+                message : "Doctor not found"
+            })
+        }
+
+        if(doctor.status === "Approved"){
+            return res.status(200).json({
+                success : false,
+                message : "Doctor is already approved"
+            })
+        }
+
+        doctor.status = "Approved";
+        await doctor.save();
+
+        return res.status(200).json({
+            success : true,
+            message : "Doctor approved successfully",
+            doctor
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success : false,
+            error
+        })
+    }
+}
+
+export const rejectDoctor = async (req, res) => {
+    try {
+        const { id } = req.params
+        const doctor = await Doctor.findById(id);
+        if(!doctor){
+            return res.status(400).json({
+                success : false,
+                message : "Doctor not found"
+            })
+        }
+
+        await Doctor.findByIdAndDelete(id);
+        return res.status(200).json({
+            success : true,
+            message : "Application rejected successfully"
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success : false,
+            error
+        })
+    }
+}
+
+export const pendingDoctors = async (req, res) => {
+    try {
+        const doctors = await Doctor.find({
+            status : "Pending"
+        });
+        if(!doctors){
+            return res.status(400).json({
+                success : false,
+                message : "Doctors not found"
+            })
+        }
+
+        return res.status(200).json({
+            success : true,
+            doctors
+        })
     } catch (error) {
         console.log(error)
         return res.status(500).json({

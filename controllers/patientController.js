@@ -85,7 +85,7 @@ export const loginPatient = async (req, res) => {
 
 export const patientProfile = async (req, res) => {
     try {
-        const patient = await Patient.findById(req.params.id);
+        const patient = await Patient.findById(req.user.id);
         if(!patient){
             return res.status(400).json({
                 success : false,
@@ -108,7 +108,7 @@ export const patientProfile = async (req, res) => {
 
 export const updatePatient = async (req, res) => {
     try {
-        const patient = await Patient.findByIdAndUpdate(req.params.id, req.body, {
+        const patient = await Patient.findByIdAndUpdate(req.user.id, req.body, {
             runValidators : true,
             new : true
         })
@@ -136,7 +136,7 @@ export const updatePatient = async (req, res) => {
 
 export const deletePatient = async (req, res) => {
     try {
-        const patient = await Patient.findByIdAndDelete(req.params.id);
+        const patient = await Patient.findByIdAndDelete(req.user.id);
         if(!patient){
             return res.status(400).json({
                 success : false,
@@ -266,6 +266,37 @@ export const resetPasswordPatient = async (req, res) => {
         patient.resetPasswordExpire = undefined
         patient.resetPasswordToken = undefined
 
+        await patient.save();
+        const message = "Password updated successfully"
+        sendToken(patient, 200, res, message)
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success : false,
+            error
+        })
+    }
+}
+
+export const updatePasswordPatient = async (req, res) => {
+    try {
+        const { oldPassword, newPassword, confirmNewPassword } = req.body;
+        const patient = await Patient.findById(req.user.id);
+        if(!patient){
+            return res.status(400).json({
+                success : false,
+                message : "User not found"
+            })
+        }
+
+        if(newPassword !== confirmNewPassword){
+            return res.status(400).json({
+                success : false,
+                message : "Password doesnt match to each other"
+            })
+        }
+
+        patient.password = newPassword;
         await patient.save();
         const message = "Password updated successfully"
         sendToken(patient, 200, res, message)
